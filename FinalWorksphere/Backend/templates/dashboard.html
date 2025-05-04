@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wellness Dashboard</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --primary: #fce168; /* Mimosa */
+      --secondary: #fabaa2; /* Salmon */
+      --accent: #ebcfaa; /* Nude */
+      --support: #7d7ca6; /* Purple Haze */
+      --bg-color: transparent;
+      --text-color: #333;
+      --card-bg: rgba(255, 255, 255, 0.25);
+      --button-bg: #7d7ca6;
+      --todo-bg: rgba(255, 255, 255, 0.3);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fce168, #fabaa2, #ebcfaa, #7d7ca6);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease infinite;
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .navbar {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: var(--support);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      flex-shrink: 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .navbar h1 {
+      font-size: 1.8rem;
+      margin: 0;
+    }
+
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 2fr 2fr 2fr;
+      gap: 1rem;
+      padding: 1rem;
+      height: calc(100vh - 80px);
+      overflow: hidden;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow: hidden;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 0;
+      overflow: hidden;
+      min-height: 0;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+
+    .button, .todo-input button, .logout-button {
+      background-color: var(--button-bg);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1rem;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .button:hover, .todo-input button:hover, .logout-button:hover {
+      background-color: #5d5c91;
+      transform: translateY(-2px);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {opacity: 0;width: 0;height: 0;}
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;left: 0;right: 0;bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--support);
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .todo-pie-container {
+      flex: 1;
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 1rem;      
+    }
+
+    .todo-input {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .todo-input input {
+      flex: 1;
+      padding: 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.3);
+      color: var(--text-color);
+      font-size: 1rem;
+      backdrop-filter: blur(8px);
+    }
+    .todo-list {
+      margin-top: 1rem;
+      list-style: none;
+      padding-left: 0;
+      overflow-y: auto;
+      max-height: calc(3 * 3.2rem); /* show ~3 tasks before scroll */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+    }
+    
+    
+    .todo-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .todo-list::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.4);
+      border-radius: 10px;
+    }
+    .task-item {
+      background: var(--todo-bg);
+      padding: 0.8rem;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .task-item.completed span {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+    .task-item button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      margin-left: 0.5rem;
+      color: var(--text-color);
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+      flex-grow: 1;
+      min-height: 0;
+    }
+
+    #calendar {
+      background: transparent;
+      width: 100%;
+      height: 100%;
+      flex-grow: 1;
+      min-height: 0;
+    }
+    .fc-day-today {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+      backdrop-filter: blur(5px);
+      border-radius: 8px;
+    }
+
+    /* Dark Mode */
+body.dark {
+  --bg-color: #1B1B2F; /* Deep navy blue */
+  --text-color: #FFFFFF; /* White for primary text */
+  --card-bg: rgba(18, 18, 37, 0.7); /* Very dark purple with glass effect */
+  --button-bg: #A244F5; /* Vibrant purple for buttons */
+  --todo-bg: rgba(66, 165, 245, 0.15); /* Light neon blue tint for tasks */
+}
+
+body.dark {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+body.dark .navbar {
+  background: rgba(18, 18, 37, 0.8); /* Very dark purple with higher opacity */
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  color: var(--text-color);
+}
+
+body.dark .card {
+  background: var(--card-bg);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+}
+
+body.dark .button,
+body.dark .todo-input button,
+body.dark .logout-button {
+  background-color: var(--button-bg);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(162, 68, 245, 0.4); /* purple button glow */
+}
+
+body.dark .task-item {
+  background: var(--todo-bg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dark #calendar {
+  background: rgba(18, 18, 37, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+body.dark .fc-day-today {
+  background-color: rgba(102, 255, 102, 0.2) !important; /* Electric green for today */
+  border-radius: 8px;
+}
+
+    
+  </style>
+</head>
+
+<body>
+  <div class="navbar">
+    <h1>Hello, {{ user }}!</h1>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <label class="switch">
+        <input type="checkbox" id="darkModeToggle" onclick="toggleDarkMode()">
+        <span class="slider"></span>
+      </label>
+      <button class="logout-button" onclick="window.location.href='/logout'">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="column">
+      <div class="card">
+        <h2>🌞 Good Morning, {{ user }}!</h2>
+        <p>Your mind matters – even 2 minutes can make a difference 🌞</p>
+        <p id="morning-time">🕗 --:-- -- • ----</p>
+        <button class="button" onclick="window.location.href='/morning-checkin?user={{ user }}'">Start Morning CheckIn 📝</button>
+      </div>
+
+      <div class="card">
+        <h2>🌙 Good Evening, {{ user }}!</h2>
+        <p>Take a moment to reflect and log your wellness score</p>
+        <p id="evening-time">🕕 --:-- -- • ----</p>
+        <button class="button" onclick="window.location.href='/wellness-checkin?user={{ user }}'">Start Evening CheckOut 📝</button>
+      </div>
+    </div>
+
+    <div class="column">
+      <div class="card todo-pie-container">
+        <div class="card" style="margin:0">
+          <h2>To-Do List</h2>
+          <div class="todo-input">
+            <input type="text" id="taskInput" placeholder="Add a new task">
+            <button onclick="addTask()">Add</button>
+          </div>
+          <ul class="todo-list" id="taskList"></ul>
+        </div>
+
+        <div class="card" style="margin:0">
+          <canvas id="wellnessChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="column">
+      <div class="card">
+        <div id="calendar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+  <script>
+    function updateTime() {
+      const now = new Date();
+  
+      const options = { hour: 'numeric', minute: 'numeric', hour12: true, weekday: 'long' };
+      const timeString = now.toLocaleTimeString('en-US', options);
+  
+      document.getElementById('morning-time').textContent = `🕗 ${timeString}`;
+      document.getElementById('evening-time').textContent = `🕕 ${timeString}`;
+    }
+  
+    updateTime();
+    setInterval(updateTime, 60000); // Har 1 minute baad time update hota rahe
+    
+    const ctx = document.getElementById('wellnessChart');
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Needs Improvement', 'Healthy'],
+        datasets: [{
+          label: 'Wellness Score',
+          data: [18, 82],
+          backgroundColor: ['#7d7ca6', '#ebcfaa']
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    function addTask() {
+      const taskInput = document.getElementById('taskInput');
+      const taskText = taskInput.value.trim();
+      if (taskText === '') return;
+
+      const taskList = document.getElementById('taskList');
+      const li = document.createElement('li');
+      li.className = 'task-item';
+
+      const span = document.createElement('span');
+      span.textContent = taskText;
+
+      const checkBtn = document.createElement('button');
+      checkBtn.innerHTML = '✅';
+      checkBtn.onclick = () => li.classList.toggle('completed');
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.innerHTML = '🗑';
+      deleteBtn.onclick = () => li.remove();
+
+      li.appendChild(span);
+      li.appendChild(checkBtn);
+      li.appendChild(deleteBtn);
+      taskList.appendChild(li);
+      taskInput.value = '';
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        height: 'parent',
+        headerToolbar: { left: 'title', right: 'prev,next today' },
+        selectable: true,
+        dayMaxEvents: true
+      });
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
