@@ -44,8 +44,8 @@ Follow these steps to set up and run the WorkSphere project locally:
 
 1. **Clone the Repository**:
    ```bash
-  git clone https://github.com/srishhk/WorkSphere.git
-  cd WorkSphere
+      git clone https://github.com/srishhk/WorkSphere.git
+      cd Worksphere
    ```
 
 2. **Set Up a Virtual Environment**:
