@@ -44,8 +44,8 @@ Follow these steps to set up and run the WorkSphere project locally:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/rakshasinha1908/RakshaSinha_AIML3_WorkSphere.git
-   cd RakshaSinha_AIML3_WorkSphere
+  git clone https://github.com/srishhk/WorkSphere.git
+  cd WorkSphere
    ```
 
 2. **Set Up a Virtual Environment**:
